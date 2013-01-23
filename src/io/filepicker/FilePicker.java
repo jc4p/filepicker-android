@@ -222,10 +222,12 @@ public class FilePicker extends Activity {
 								// intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
 								// android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 								try {
-									imageUri = Uri.parse("file://" + File.createTempFile("fpf", ".jpg"));
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
+                                    File cacheDir = getApplicationContext().getExternalCacheDir();
+                                    imageUri = Uri.fromFile(File.createTempFile("fpf", ".jpg", cacheDir).getAbsoluteFile());
+                                } catch (IOException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
 								intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 								startActivityForResult(intent, CAMERA_REQUEST);
 							}
@@ -553,7 +555,7 @@ public class FilePicker extends Activity {
 							matrix.preRotate(rotation);
 
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 720, 960);
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 640, 480);
 							bmpOptions.inSampleSize = sampleSize;
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
@@ -568,7 +570,7 @@ public class FilePicker extends Activity {
 					else if (getImageWidthAndHeight(getApplicationContext(), fileUri) != null) {
 						try {
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 720, 960);
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 640, 480);
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
@@ -594,7 +596,7 @@ public class FilePicker extends Activity {
 							matrix.preRotate(rotation);
 
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 720, 960);
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 640, 480);
 							bmpOptions.inSampleSize = sampleSize;
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
@@ -609,7 +611,7 @@ public class FilePicker extends Activity {
 					else if (getImageWidthAndHeight(getApplicationContext(), imageUri) != null) {
 						try {
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 720, 960);
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 640, 480);
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
