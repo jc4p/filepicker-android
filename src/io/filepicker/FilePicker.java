@@ -1,16 +1,12 @@
 package io.filepicker;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.filepicker.R;
-
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.provider.MediaStore;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -18,8 +14,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.PorterDuff.Mode;
+import android.media.ExifInterface;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -97,8 +103,7 @@ public class FilePicker extends Activity {
 			addView(textView);
 
 			if (inode.getIsDir()) {
-				FilePickerAPI.getInstance()
-				.precache(inode.getPath(), mimetypes);
+				FilePickerAPI.getInstance().precache(inode.getPath(), mimetypes);
 			}
 		}
 
@@ -112,8 +117,7 @@ public class FilePicker extends Activity {
 	class InodeArrayAdapter<T> extends ArrayAdapter<T> {
 		private boolean thumbnail = false;
 
-		public InodeArrayAdapter(Context context, int textViewResourceId,
-				T[] objects) {
+		public InodeArrayAdapter(Context context, int textViewResourceId, T[] objects) {
 			super(context, textViewResourceId, objects);
 		}
 
@@ -124,9 +128,11 @@ public class FilePicker extends Activity {
 			if (inode.getThumb_exists() && thumbnail) {
 				ThumbnailView icon = new ThumbnailView(FilePicker.this, inode);
 				return icon;
-			} else if (thumbnail) {
+			}
+			else if (thumbnail) {
 				return new NonThumbnailGridBlockView(FilePicker.this, inode);
-			} else {
+			}
+			else {
 				return new FPInodeView(FilePicker.this, inode, thumbnail);
 			}
 		}
@@ -149,10 +155,10 @@ public class FilePicker extends Activity {
 					if (selectedServices == null)
 						root = fpapi.getProvidersForMimetype(mimetypes, saveas);
 					else
-						root = fpapi
-						.getProvidersForServiceArray(selectedServices);
+						root = fpapi.getProvidersForServiceArray(selectedServices);
 					return new Folder(root, "list", "");
-				} else {
+				}
+				else {
 					return fpapi.getPath(path, mimetypes);
 				}
 			} catch (AuthError e) {
@@ -170,15 +176,16 @@ public class FilePicker extends Activity {
 				intent.putExtra("service", this.authError.getService());
 				startActivityForResult(intent, FilePickerAPI.REQUEST_CODE_AUTH);
 				overridePendingTransition(0, 0);
-			} else if (result == null) {
+			}
+			else if (result == null) {
 				Toast.makeText(FilePicker.this, "An unexpected error occured. Are you connected to a network?", Toast.LENGTH_LONG).show();
 				setResult(RESULT_CANCELED);
 				finish();
-			} else {
+			}
+			else {
 				ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar1);
 				progressBar.setVisibility(ProgressBar.INVISIBLE);
-				InodeArrayAdapter<Inode> iarrayadapter = new InodeArrayAdapter<Inode>(
-						FilePicker.this, 0, result.getInodes());
+				InodeArrayAdapter<Inode> iarrayadapter = new InodeArrayAdapter<Inode>(FilePicker.this, 0, result.getInodes());
 				if (!path.equals("/"))
 					setTitle(result.getName());
 				if (result.getView().equals("thumbnails")) {
@@ -187,7 +194,8 @@ public class FilePicker extends Activity {
 					currentview = gridview;
 					gridview.setBackgroundColor(Color.BLACK);
 					gridview.getRootView().setBackgroundColor(Color.BLACK);
-				} else {
+				}
+				else {
 					listview.setAdapter(iarrayadapter);
 					currentview = listview;
 				}
@@ -196,10 +204,8 @@ public class FilePicker extends Activity {
 
 					@Override
 					@SuppressLint("NewApi")
-					public void onItemClick(AdapterView<?> parent, View view,
-							int position, long id) {
-						Inode inode = (Inode) (parent.getAdapter()
-								.getItem(position));
+					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+						Inode inode = (Inode) (parent.getAdapter().getItem(position));
 						if (inode.isDisabled()) {
 							Toast.makeText(FilePicker.this, "App doesn't support this file type", Toast.LENGTH_SHORT).show();
 							return;
@@ -207,50 +213,41 @@ public class FilePicker extends Activity {
 						if (inode.getIsDir()) {
 							// is a subdirectory
 							if (inode.getDisplayName().equals("Gallery")) {
-								Intent intent = new Intent(
-										Intent.ACTION_GET_CONTENT);
-								intent.setType("image/*").addCategory(
-										Intent.CATEGORY_OPENABLE);
-								startActivityForResult(
-										intent,
-										FilePickerAPI.REQUEST_CODE_GETFILE_LOCAL);
-							} else if (inode.getDisplayName().equals("Camera")) {
-								Intent intent = new Intent(
-										MediaStore.ACTION_IMAGE_CAPTURE);
+								Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+								intent.setType("image/*").addCategory(Intent.CATEGORY_OPENABLE);
+								startActivityForResult(intent, FilePickerAPI.REQUEST_CODE_GETFILE_LOCAL);
+							}
+							else if (inode.getDisplayName().equals("Camera")) {
+								Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 								// intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
 								// android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 								try {
-									imageUri = Uri.parse("file://"
-											+ File.createTempFile("fpf",
-													".jpg"));
+									imageUri = Uri.parse("file://" + File.createTempFile("fpf", ".jpg"));
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
-								intent.putExtra(MediaStore.EXTRA_OUTPUT,
-										imageUri);
+								intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 								startActivityForResult(intent, CAMERA_REQUEST);
-							} else {
-								Intent intent = new Intent(FilePicker.this,
-										FilePicker.class);
+							}
+							else {
+								Intent intent = new Intent(FilePicker.this, FilePicker.class);
 								intent.putExtra("path", inode.getPath());
 								intent.setType(mimetypes);
-								intent.putExtra("display_name",
-										inode.getDisplayName());
+								intent.putExtra("display_name", inode.getDisplayName());
 								if (saveas) {
 									intent.setData(fileToSave);
 									intent.setAction(SAVE_CONTENT);
 									if (extension.length() > 0)
 										intent.putExtra("extension", extension);
-									startActivityForResult(intent,
-											FilePickerAPI.REQUEST_CODE_SAVEFILE);
-								} else {
-									startActivityForResult(intent,
-											FilePickerAPI.REQUEST_CODE_GETFILE);
+									startActivityForResult(intent, FilePickerAPI.REQUEST_CODE_SAVEFILE);
+								}
+								else {
+									startActivityForResult(intent, FilePickerAPI.REQUEST_CODE_GETFILE);
 								}
 							}
-							overridePendingTransition(R.anim.right_slide_in,
-									R.anim.right_slide_out);
-						} else if (!saveas) {
+							overridePendingTransition(R.anim.right_slide_in, R.anim.right_slide_out);
+						}
+						else if (!saveas) {
 							ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar1);
 							progressBar.setVisibility(ProgressBar.VISIBLE);
 							int SDK_INT = android.os.Build.VERSION.SDK_INT;
@@ -277,8 +274,7 @@ public class FilePicker extends Activity {
 			}
 			String path = arg0[0];
 			try {
-				return FilePickerAPI.getInstance().getLocalFileForPath(path,
-						FilePicker.this);
+				return FilePickerAPI.getInstance().getLocalFileForPath(path, FilePicker.this);
 			} catch (AuthError e) {
 				e.printStackTrace();
 			}
@@ -322,7 +318,8 @@ public class FilePicker extends Activity {
 			resultIntent.setData(uri);
 			if (result == null) {
 				resultIntent.putExtra("fpurl", "");
-			} else {
+			}
+			else {
 				resultIntent.putExtra("fpurl", result.getFPUrl());
 			}
 			setResult(RESULT_OK, resultIntent);
@@ -333,8 +330,7 @@ public class FilePicker extends Activity {
 
 	@SuppressLint("NewApi")
 	protected void getCookiesFromBrowser() {
-		String fpcookie = CookieManager.getInstance().getCookie(
-				FilePickerAPI.FPHOSTNAME);
+		String fpcookie = CookieManager.getInstance().getCookie(FilePickerAPI.FPHOSTNAME);
 		Pattern regex = Pattern.compile("session=\"(.*)\"");
 		Matcher match = regex.matcher(fpcookie);
 		if (!match.matches())
@@ -354,11 +350,8 @@ public class FilePicker extends Activity {
 
 	protected void unauth(final Service service) {
 		if (service.getServiceId().length() == 0)
-			return; //local
-		new AlertDialog.Builder(this)
-		.setTitle("Logout")
-		.setMessage("Log out of " + service.getDisplayName() + "?")
-		.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			return; // local
+		new AlertDialog.Builder(this).setTitle("Logout").setMessage("Log out of " + service.getDisplayName() + "?").setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -366,9 +359,7 @@ public class FilePicker extends Activity {
 				new UnAuthTask().execute(service);
 
 			}
-		})
-		.setNegativeButton("Cancel", null)
-		.show();
+		}).setNegativeButton("Cancel", null).show();
 	}
 
 	class UnAuthTask extends AsyncTask<Service, Integer, Void> {
@@ -394,8 +385,7 @@ public class FilePicker extends Activity {
 			}
 			String path = arg0[0];
 			try {
-				FilePickerAPI.getInstance().saveFileAs(path, fileToSave,
-						FilePicker.this);
+				FilePickerAPI.getInstance().saveFileAs(path, fileToSave, FilePicker.this);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -404,8 +394,7 @@ public class FilePicker extends Activity {
 
 		@Override
 		protected void onPostExecute(String result) {
-			Toast.makeText(FilePicker.this, "Saved succesfully!",
-					Toast.LENGTH_SHORT).show();
+			Toast.makeText(FilePicker.this, "Saved succesfully!", Toast.LENGTH_SHORT).show();
 			Intent resultIntent = new Intent();
 			// resultIntent.setData(Uri.parse("file://" + result));
 			// resultIntent.putExtra("filepath", result);
@@ -440,8 +429,7 @@ public class FilePicker extends Activity {
 		super.onCreate(savedInstanceState);
 
 		if (!FilePickerAPI.isKeySet()) {
-			Toast.makeText(this, "No Filepicker.io API Key set!",
-					Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "No Filepicker.io API Key set!", Toast.LENGTH_LONG).show();
 			setResult(RESULT_CANCELED);
 			finish();
 		}
@@ -456,8 +444,7 @@ public class FilePicker extends Activity {
 				path = myIntent.getExtras().getString("path");
 			}
 			if (myIntent.getExtras().containsKey("services")) {
-				selectedServices = myIntent.getExtras().getStringArray(
-						"services");
+				selectedServices = myIntent.getExtras().getStringArray("services");
 			}
 			if (myIntent.getExtras().containsKey("extension")) {
 				extension = myIntent.getExtras().getString("extension");
@@ -468,24 +455,26 @@ public class FilePicker extends Activity {
 		}
 		if (path.equals("/")) {
 			setTitle("Please choose a file");
-		} else {
+		}
+		else {
 			String[] splitPath = path.split("/");
 			if (displayName != null) {
 				setTitle(displayName);
-			} else {
+			}
+			else {
 				setTitle(splitPath[splitPath.length - 1]);
 			}
 		}
 
 		CookieSyncManager.createInstance(this); // webview
 
-		if (myIntent.getAction() != null
-				&& myIntent.getAction().equals(SAVE_CONTENT)) {
+		if (myIntent.getAction() != null && myIntent.getAction().equals(SAVE_CONTENT)) {
 			if (myIntent.getData() == null) {
 				Log.e(TAG, "No data passed in intent");
 				setResult(RESULT_CANCELED);
 				finish();
-			} else {
+			}
+			else {
 				saveas = true;
 				fileToSave = myIntent.getData();
 			}
@@ -503,7 +492,8 @@ public class FilePicker extends Activity {
 			}
 			if (path.equals("/") || path.equals("/Facebook/")) {
 				saveButton.setEnabled(false);
-			} else {
+			}
+			else {
 				saveButton.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
@@ -512,7 +502,8 @@ public class FilePicker extends Activity {
 				});
 			}
 			fileToSave = myIntent.getData();
-		} else {
+		}
+		else {
 			setContentView(R.layout.activity_file_picker);
 		}
 		listview = (ListView) findViewById(R.id.listView1);
@@ -526,45 +517,114 @@ public class FilePicker extends Activity {
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		overridePendingTransition(R.anim.right_slide_out_back,
-				R.anim.right_slide_in_back);
+		overridePendingTransition(R.anim.right_slide_out_back, R.anim.right_slide_in_back);
 	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
-		case FilePickerAPI.REQUEST_CODE_AUTH:
-			if (resultCode == RESULT_OK) {
-				getCookiesFromBrowser();
-				new FpapiTask().execute(6L);
-			} else {
-				setResult(RESULT_CANCELED);
-				finish();
-			}
-			break;
-		case FilePickerAPI.REQUEST_CODE_GETFILE:
-		case FilePickerAPI.REQUEST_CODE_SAVEFILE:
-			if (resultCode == RESULT_OK) {
-				setResult(RESULT_OK, data);
-				DataCache.getInstance().clearCache();
-				finish();
-			}
-			break;
-		case FilePickerAPI.REQUEST_CODE_GETFILE_LOCAL:
-			if (resultCode == RESULT_OK) {
-				// add in url
-				new UploadLocalFileTask().execute(data.getData());
-				// enableLoading()
-				setProgressVisible();
-			}
-			break;
-		case CAMERA_REQUEST:
-			if (resultCode == RESULT_OK) {
-				new UploadLocalFileTask().execute(imageUri);
-				setProgressVisible();
-				// enableLoading
-			}
-			break;
+			case FilePickerAPI.REQUEST_CODE_AUTH:
+				if (resultCode == RESULT_OK) {
+					getCookiesFromBrowser();
+					new FpapiTask().execute(6L);
+				}
+				else {
+					setResult(RESULT_CANCELED);
+					finish();
+				}
+				break;
+			case FilePickerAPI.REQUEST_CODE_GETFILE:
+			case FilePickerAPI.REQUEST_CODE_SAVEFILE:
+				if (resultCode == RESULT_OK) {
+					setResult(RESULT_OK, data);
+					DataCache.getInstance().clearCache();
+					finish();
+				}
+				break;
+			case FilePickerAPI.REQUEST_CODE_GETFILE_LOCAL:
+				if (resultCode == RESULT_OK) {
+					// add in url
+					Uri fileUri = data.getData();
+
+					float rotation = rotationForImage(getApplicationContext(), fileUri);
+					if (rotation != 0.0) {
+						try {
+							Matrix matrix = new Matrix();
+							matrix.preRotate(rotation);
+
+							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 720, 960);
+							bmpOptions.inSampleSize = sampleSize;
+							Bitmap originalBitmap;
+							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
+							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), matrix, true);
+
+							FileOutputStream out = new FileOutputStream(new File(new URI(fileUri.toString())).getAbsolutePath());
+							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					else if (getImageWidthAndHeight(getApplicationContext(), fileUri) != null) {
+						try {
+							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 720, 960);
+							Bitmap originalBitmap;
+							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
+							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
+
+							FileOutputStream out = new FileOutputStream(new File(new URI(fileUri.toString())).getAbsolutePath());
+							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+					new UploadLocalFileTask().execute(fileUri);
+					// enableLoading()
+					setProgressVisible();
+				}
+				break;
+			case CAMERA_REQUEST:
+				if (resultCode == RESULT_OK) {
+					float rotation = rotationForImage(getApplicationContext(), imageUri);
+					if (rotation != 0.0) {
+						try {
+							Matrix matrix = new Matrix();
+							matrix.preRotate(rotation);
+
+							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 720, 960);
+							bmpOptions.inSampleSize = sampleSize;
+							Bitmap originalBitmap;
+							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
+							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), matrix, true);
+
+							FileOutputStream out = new FileOutputStream(new File(new URI(imageUri.toString())).getAbsolutePath());
+							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					else if (getImageWidthAndHeight(getApplicationContext(), imageUri) != null) {
+						try {
+							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 720, 960);
+							Bitmap originalBitmap;
+							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
+							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
+
+							FileOutputStream out = new FileOutputStream(new File(new URI(imageUri.toString())).getAbsolutePath());
+							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					new UploadLocalFileTask().execute(imageUri);
+					setProgressVisible();
+					// enableLoading
+				}
+				break;
 		}
 
 	}
@@ -577,5 +637,102 @@ public class FilePicker extends Activity {
 	private void setProgressVisible() {
 		ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar1);
 		progressBar.setVisibility(ProgressBar.VISIBLE);
+	}
+
+	public static int[] getImageWidthAndHeight(Context context, Uri uri) {
+		if (uri == null || uri.getScheme() == null) {
+			return null;
+		}
+		if (uri.getScheme().equals("content")) {
+			try {
+				String[] projection = { Images.ImageColumns.WIDTH, Images.ImageColumns.HEIGHT };
+				Cursor c = context.getContentResolver().query(uri, projection, null, null, null);
+				if (c.moveToFirst()) {
+					float width = c.getFloat(0);
+					float height = c.getFloat(1);
+
+					return new int[] { (int) width, (int) height };
+				}
+			} catch (Exception e) {
+			}
+		}
+		else if (uri.getScheme().equals("file")) {
+			try {
+				ExifInterface exif = new ExifInterface(uri.getPath());
+				int width = Integer.valueOf(exif.getAttribute(ExifInterface.TAG_IMAGE_WIDTH));
+				int height = Integer.valueOf(exif.getAttribute(ExifInterface.TAG_IMAGE_LENGTH));
+
+				return new int[] { width, height };
+			} catch (IOException e) {
+			}
+		}
+		return null;
+	}
+
+	public static float rotationForImage(Context context, Uri uri) {
+		if (uri == null || uri.getScheme() == null) {
+			return 0f;
+		}
+		if (uri.getScheme().equals("content")) {
+			String[] projection = { Images.ImageColumns.ORIENTATION };
+			Cursor c = context.getContentResolver().query(uri, projection, null, null, null);
+			if (c.moveToFirst()) {
+				return c.getInt(0);
+			}
+		}
+		else if (uri.getScheme().equals("file")) {
+			try {
+				ExifInterface exif = new ExifInterface(uri.getPath());
+				int rotation = (int) exifOrientationToDegrees(exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL));
+				return rotation;
+			} catch (IOException e) {
+			}
+		}
+		return 0f;
+	}
+
+	private static float exifOrientationToDegrees(int exifOrientation) {
+		if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+			return 90;
+		}
+		else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+			return 180;
+		}
+		else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+			return 270;
+		}
+		return 0;
+	}
+
+	public static int calculateInSampleSize(int[] rawSize, int reqWidthIn, int reqHeightIn) {
+		if (rawSize == null) {
+			return 2;
+		}
+
+		int rawWidth = rawSize[0];
+		int rawHeight = rawSize[1];
+
+		int reqWidth = reqWidthIn;
+		int reqHeight = reqHeightIn;
+
+		if (rawWidth > rawHeight) {
+			reqWidth = reqHeightIn;
+			reqHeight = reqWidthIn;
+		}
+
+		// Raw height and width of image
+		final int height = rawHeight;
+		final int width = rawWidth;
+		int inSampleSize = 1;
+
+		if (height > reqHeight || width > reqWidth) {
+			if (width > height) {
+				inSampleSize = Math.round((float) height / (float) reqHeight);
+			}
+			else {
+				inSampleSize = Math.round((float) width / (float) reqWidth);
+			}
+		}
+		return inSampleSize;
 	}
 }
