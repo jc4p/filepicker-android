@@ -1,15 +1,5 @@
 package io.filepicker;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.net.http.AndroidHttpClient;
-import android.os.AsyncTask;
-import android.os.Environment;
-import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,10 +10,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Calendar;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
@@ -34,19 +27,28 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.scheme.LayeredSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.params.HttpParams;
-import org.apache.http.conn.scheme.SocketFactory;
-import java.net.InetAddress;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.net.http.AndroidHttpClient;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.util.Log;
 
 public class FilePickerAPI {
 
@@ -456,10 +458,11 @@ public class FilePickerAPI {
 		ByteArrayEntity entity = new ByteArrayEntity(
 				readBinaryInputStream(context.getContentResolver()
 						.openInputStream(contentURI)));
+		entity.setContentType("image/jpeg");
 		httppost.setEntity(entity);
 		entity.setChunked(false);
-		httppost.setHeader("X-File-Name", "testfile.file");
-		httppost.setHeader("Content-Type", "application/octet-stream");
+		httppost.setHeader("X-File-Name", Calendar.getInstance().getTime().getTime() + ".jpg");
+		httppost.setHeader("Content-Type", "image/jpeg");
 		String response = getStringFromNetworkRequest(httppost);
 		try {
 			JSONObject json = new JSONObject(response);
