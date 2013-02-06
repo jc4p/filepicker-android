@@ -555,14 +555,14 @@ public class FilePicker extends Activity {
 							matrix.preRotate(rotation);
 
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 768, 1024);
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 960, 1280);
 							bmpOptions.inSampleSize = sampleSize;
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), matrix, true);
 
 							FileOutputStream out = new FileOutputStream(new File(new URI(fileUri.toString())).getAbsolutePath());
-							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+							resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -570,13 +570,13 @@ public class FilePicker extends Activity {
 					else if (getImageWidthAndHeight(getApplicationContext(), fileUri) != null) {
 						try {
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 768, 1024);
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), fileUri), 960, 1280);
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(fileUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
 
 							FileOutputStream out = new FileOutputStream(new File(new URI(fileUri.toString())).getAbsolutePath());
-							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+							resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -596,14 +596,14 @@ public class FilePicker extends Activity {
 							matrix.preRotate(rotation);
 
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 768, 1024);
+							int sampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 960, 1280);
 							bmpOptions.inSampleSize = sampleSize;
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), matrix, true);
 
 							FileOutputStream out = new FileOutputStream(new File(new URI(imageUri.toString())).getAbsolutePath());
-							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+							resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -611,13 +611,13 @@ public class FilePicker extends Activity {
 					else if (getImageWidthAndHeight(getApplicationContext(), imageUri) != null) {
 						try {
 							BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
-							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 768, 1024);
+							bmpOptions.inSampleSize = calculateInSampleSize(getImageWidthAndHeight(getApplicationContext(), imageUri), 960, 1280);
 							Bitmap originalBitmap;
 							originalBitmap = BitmapFactory.decodeFile(new File(new URI(imageUri.toString())).getAbsolutePath(), bmpOptions);
 							Bitmap resizedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), null, true);
 
 							FileOutputStream out = new FileOutputStream(new File(new URI(imageUri.toString())).getAbsolutePath());
-							resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+							resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
