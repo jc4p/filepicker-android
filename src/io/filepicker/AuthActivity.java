@@ -1,22 +1,19 @@
 package io.filepicker;
 
-import io.filepicker.R;
-
-import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
-import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
-import android.support.v4.app.NavUtils;
 
 public class AuthActivity extends Activity {
 	private String service;
 	private static String TAG = "AuthActivity";
-	
+
 	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -30,21 +27,31 @@ public class AuthActivity extends Activity {
 			setTitle("Please Authenticate");
 			webview.getSettings().setJavaScriptEnabled(true);
 			webview.setWebViewClient(new WebViewClient() {
-				//keep redirects in our app
+				// keep redirects in our app
 				public boolean shouldOverrideUrlLoading(WebView view, String url) {
-					return false; //false to handle redirects in the webview
+					System.out.println("redirect: " + url);
+					if (url.startsWith(FilePickerAPI.FPBASEURL + "api/client") && url.contains("authCallback/open")) {
+						// if (url.startsWith(FilePickerAPI.FPBASEURL +
+						// "dialog")) {
+						// load cookies
+						setResult(RESULT_OK);
+						AuthActivity.this.finish();
+						overridePendingTransition(R.anim.right_slide_out_back, R.anim.right_slide_in_back);
+					}
+					return false; // false to handle redirects in the webview
 				}
-				
+
 				public void onPageFinished(WebView view, String url) {
 					ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar1);
 					progressBar.setVisibility(ProgressBar.INVISIBLE);
-					
+					System.out.println(url);
 					if (url.startsWith(FilePickerAPI.FPBASEURL + "api/client") && url.contains("authCallback/open")) {
-						//load cookies
+						// if (url.startsWith(FilePickerAPI.FPBASEURL +
+						// "dialog")) {
+						// load cookies
 						setResult(RESULT_OK);
 						AuthActivity.this.finish();
-						overridePendingTransition(R.anim.right_slide_out_back,
-								R.anim.right_slide_in_back);
+						overridePendingTransition(R.anim.right_slide_out_back, R.anim.right_slide_in_back);
 						assert false : "shouldn't reach this point";
 						return;
 					}
@@ -52,28 +59,27 @@ public class AuthActivity extends Activity {
 			});
 			String url = FilePickerAPI.FPBASEURL + "api/client/" + service + "/auth/open";
 			webview.loadUrl(url);
-		} else {
+		}
+		else {
 			setResult(RESULT_CANCELED);
 			finish();
 		}
 	}
 
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(this);
+				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		overridePendingTransition(R.anim.right_slide_out_back,
-				R.anim.right_slide_in_back);
+		overridePendingTransition(R.anim.right_slide_out_back, R.anim.right_slide_in_back);
 	}
 
 }
